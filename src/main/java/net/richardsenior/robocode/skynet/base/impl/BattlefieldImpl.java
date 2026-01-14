@@ -2,6 +2,8 @@ package net.richardsenior.robocode.skynet.base.impl;
 import net.richardsenior.robocode.skynet.base.Battlefield;
 import net.richardsenior.robocode.skynet.base.Enemy;
 import net.richardsenior.robocode.skynet.base.Obstacle;
+import net.richardsenior.robocode.skynet.base.Scanner;
+import net.richardsenior.robocode.skynet.base.Wave;
 import robocode.*;
 import java.util.Set;
 /**
@@ -17,38 +19,54 @@ public class BattlefieldImpl implements Battlefield {
     private Enemy selfEnemy;
     private AdvancedRobot self;
     private double[][] cells;
+    private Scanner scanner;
+    private int scannedEnemies = 0;
+    private long oldestScan = 0;
 
     public AdvancedRobot getSelf() {return this.self;}
+    public Enemy getSelfAsEnemy() {return this.selfEnemy;}
 
     // private constructor to prevent instantiation from outside the class
     public BattlefieldImpl(AdvancedRobot self) {
         this.self = self;                
-        this.obstacles = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<Obstacle, Boolean>());
+        this.obstacles = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<Obstacle, Boolean>());
         // create an Enemy class which represents this robot
         this.selfEnemy = new SelfEnemyImpl(this);
         this.obstacles.add(this.selfEnemy);
+        this.scanner = new ScannerImpl(this);
         this.cells = new double[10][10]; // example: 10x10 grid of cells
-    }   
+    }
     
     @Override
-    public void update() {           
+    public void update() {   
+        this.scanner.scan();        
+        // Update all obstacles
+        this.scannedEnemies = 0;
+        this.oldestScan = Long.MAX_VALUE;
         for (Obstacle obstacle : obstacles) {
+            // maintain a count of how many enemies we have scanned
+            if (obstacle instanceof Enemy && !(obstacle instanceof SelfEnemyImpl)) {
+                this.scannedEnemies++;
+                long t = ((Enemy)obstacle).getScanHistory().peek().getTime();
+                // how long ago did we scan the the whole battlefield?
+                if (t < this.oldestScan) {this.oldestScan = t;}
+            }
             obstacle.update();
         }
     }
 
     @Override
     public void update(robocode.Event event) {
-        // big switch/case statement of event types           
         switch (event.getClass().getSimpleName()) {
-            case "BulletHitEvent":
-                // handle bullet hit event
-                break;
             case "RobotDeathEvent":
-                // handle robot death event
+                RobotDeathEvent rde = (RobotDeathEvent) event;
+                String deadRobotName = rde.getName();
+                obstacles.removeIf(obstacle -> 
+                    obstacle instanceof Enemy && 
+                    ((Enemy) obstacle).getId().equals(deadRobotName)
+                );
                 break;
-            case "ScannedRobotEvent":
-                // determine which robot was scanned and update it or add it etc.
+            case "ScannedRobotEvent":                
                 ScannedRobotEvent sre = (ScannedRobotEvent) event;
                 Enemy enemy = this.getEnemy(sre.getName());
                 enemy.update(sre);
@@ -56,7 +74,12 @@ public class BattlefieldImpl implements Battlefield {
             default: return;                
         }
     }
+    @Override
+    public int getEnemyCount() {return this.scannedEnemies;}
+    @Override
+    public long getOldestSighting() {return this.oldestScan;}
 
+    @Override
     public Enemy getEnemy(String name) {
         if (name == null) {throw new IllegalArgumentException("Enemy name cannot be null");}
         for (Obstacle obstacle : obstacles) {
@@ -69,19 +92,47 @@ public class BattlefieldImpl implements Battlefield {
         this.add(e);
         return e;
     }
-
+    
+    @Override
     public void onPaint(java.awt.Graphics2D g) {
-        // draw obstacles
+        // Draw debug info box
+        g.setColor(java.awt.Color.BLACK);
+        g.fillRect(10, 10, 300, 200);
+        g.setColor(java.awt.Color.WHITE);
+        g.drawRect(10, 10, 300, 200);
+        
+        // Draw obstacle list
+        g.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 12));
+        g.drawString("Obstacles (" + obstacles.size() + "):", 15, 30);
+        
+        int y = 50;
+        int count = 0;
+        for (Obstacle obstacle : obstacles) {
+            if (count >= 12) {
+                g.drawString("... (" + (obstacles.size() - count) + " more)", 15, y);
+                break;
+            }
+            
+            String className = obstacle.getClass().getSimpleName();
+            String name = "Unknown";
+            
+            if (obstacle instanceof Enemy) {
+                name = ((Enemy) obstacle).getId();
+            } else if (obstacle instanceof Wave) {
+                Wave wave = (Wave) obstacle;
+                name = "R:" + wave.getRadius();
+            }
+            
+            g.drawString(count + ": " + className + " - " + name, 15, y);
+            y += 15;
+            count++;
+        }
+        
+        // Draw obstacles
         for (Obstacle obstacle : obstacles) {
             obstacle.drawOutline(g);
         }
     }
-
-    /**************************
-    Geometry Utility methods
-    ***************************/
-
-
     /**************************
     Set Delegate Methods
     Implelement the Set interface using a weak hash set as the backing store

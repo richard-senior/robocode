@@ -12,23 +12,31 @@ public class SelfEnemyImpl extends EnemyImpl {
     public SelfEnemyImpl(Battlefield battlefield) {  
         super(battlefield.getSelf().getName(), battlefield);
     }   
+    
     @Override
     public void update() {
-        EventWrapperImpl e = new EventWrapperImpl(this.getBattlefield().getSelf().getName());
-        Battlefield bf = this.getBattlefield();
-        e.setPosition(new java.awt.geom.Point2D.Double(bf.getSelf().getX(), bf.getSelf().getY()));
-        e.setHeading(bf.getSelf().getHeadingRadians());
-        e.setVelocity(bf.getSelf().getVelocity());
-        e.setEnergy(bf.getSelf().getEnergy());
-        e.setBearing(0);
-        e.setDistance(0);        
-        e.setTime(bf.getSelf().getTime());
-        updateSelf(e);
+        // Only update when radar is in first half of rotation (0 to π radians)
+        double radarHeading = getBattlefield().getSelf().getRadarHeadingRadians();
+        if (radarHeading >= 0 && radarHeading <= Math.PI) {
+            EventWrapperImpl e = new EventWrapperImpl(this.getBattlefield().getSelf().getName());
+            Battlefield bf = this.getBattlefield();
+            e.setPosition(new java.awt.geom.Point2D.Double(bf.getSelf().getX(), bf.getSelf().getY()));
+            e.setHeading(bf.getSelf().getHeadingRadians());
+            e.setVelocity(bf.getSelf().getVelocity());
+            e.setEnergy(bf.getSelf().getEnergy());
+            e.setBearing(0);
+            e.setDistance(0);        
+            e.setTime(bf.getSelf().getTime());
+            updateSelf(e);
+        }
     }
+
+    /** overriden to prevent firing detection on ourself */
+    protected void doHasFired(EventWrapperImpl s) {}
 
     /**
      * We don't want to update the predictor or create self waves
      */
-    @Override
-    protected void updatePredictorAndFiringEvent() {}
+    //@Override
+    //protected void updatePredictorAndFiringEvent() {}
 }

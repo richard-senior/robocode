@@ -37,4 +37,10 @@ public interface Obstacle {
      * @param g the Graphics2D context from onPaint method
      */
     public void drawOutline(java.awt.Graphics2D g);
+
+    /**
+     *  when was the last confirmed sighting (scan) of this obstacle
+     *  in ticks
+     */
+    public long lastSeen();
 }

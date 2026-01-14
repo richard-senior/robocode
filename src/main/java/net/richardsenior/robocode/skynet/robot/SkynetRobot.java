@@ -12,6 +12,7 @@ import robocode.HitWallEvent;
 
 /**
  * Simple delegate wrapper around the Battlefield object allowing simple abstraction
+ * https://github.com/robomirror/mirror/tree/master/robots
  */
 public class SkynetRobot extends AdvancedRobot {
     // in future this may be a collection of different battlefield implementions (melee, 1v1 etc.)
@@ -19,29 +20,11 @@ public class SkynetRobot extends AdvancedRobot {
 
     @Override
     public void run() {
-        System.out.println("=== SkynetRobot starting ===");
-        
         try {
-            // Test battlefield creation only
-            System.out.println("Creating battlefield...");
             this.battlefield = new BattlefieldImpl(this);
-            System.out.println("Battlefield created successfully");
-            
-            setAdjustGunForRobotTurn(true);
-            setAdjustRadarForGunTurn(true);
-            
-            System.out.println("Starting main loop...");
-            int count = 0;
             while (true) {
-                // Test battlefield update but limit logging
-                if (count % 1000 == 0) {
-                    System.out.println("Update count: " + count + ", obstacles: " + battlefield.size());
-                }
                 this.battlefield.update();
-                count++;
-                
-                // Basic robot movement
-                turnRadarRight(10);
+                execute();
             }
         } catch (Exception e) {
             System.out.println("ERROR: " + e.getMessage());
@@ -76,5 +59,5 @@ public class SkynetRobot extends AdvancedRobot {
     @Override
     public void onWin(WinEvent e) {this.battlefield.update(e);}
     @Override
-    public void onPaint(java.awt.Graphics2D g) {battlefield.onPaint(g);}
+    public void onPaint(java.awt.Graphics2D g) {this.battlefield.onPaint(g);}
 }

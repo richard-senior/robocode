@@ -26,7 +26,7 @@ public class EnemyImpl implements Enemy {
     private Area outline;
     private Point2D.Double position;
     private Battlefield battlefield;
-    private double lastEnemyEnergy = 100.0; // Default starting energy
+    private double energy = 100;
     
     @Override
     public Point2D.Double getPosition() {
@@ -56,6 +56,12 @@ public class EnemyImpl implements Enemy {
     }
 
     @Override
+    public long lastSeen() {
+        if (this.scanHistory.isEmpty()) {return Long.MAX_VALUE;}
+        return this.battlefield.getSelf().getTime() - this.scanHistory.peek().getTime();
+    }
+
+    @Override
     public void update() {
         // enemies have no per-tick update behaviour currently
         // see update(Event) instead
@@ -81,8 +87,6 @@ public class EnemyImpl implements Enemy {
                 s.setPosition(new Point2D.Double(enemyX, enemyY));
                 updateSelf(s);
                 break;
-            case "BulletHitEvent":
-                break;
             default: return;                
         }
     }
@@ -96,42 +100,40 @@ public class EnemyImpl implements Enemy {
         this.outline = new Area(new java.awt.geom.Ellipse2D.Double(this.position.x - 18, this.position.y - 18, 36, 36));
         // maintain only last N scans?
         while (scanHistory.size() > 5) {scanHistory.poll();}                
+        // Check for firing BEFORE adding new scan
+        doHasFired(event);
         // append x and y to 
         scanHistory.add(event);        
-        this.updatePredictorAndFiringEvent();
+        this.updatePredictor();
     }
 
     // May be overriden by extending classes to prevent recalculation of the predictor
-    protected void updatePredictorAndFiringEvent() {        
+    protected void updatePredictor() {        
         Predictor p = new PolynomialPredictor(this.getScanHistory());
         EventWrapperImpl event = this.getScanHistory().peek();
         event.setPredictor(p);
-        // if this enemy has fired, then create a wave and add it to Battlefield
-        doHasFired(event);
     }
 
     /**
      * If this enemy has fired then create a wave and add it to battlefield
      * @param s
      */
-    private void doHasFired(EventWrapperImpl s) {
-        // has this enemy fired?
-        double currentEnergy = s.getEnergy();
-        // energy drop is previous energy - current energy  
-        double ed = lastEnemyEnergy - currentEnergy;
-        System.out.println("Energy drop: " + ed + " (last: " + lastEnemyEnergy + ", current: " + currentEnergy + ")");
+    protected void doHasFired(EventWrapperImpl newScan) {
+        double currentEnergy = newScan.getEnergy();
+        double bulletPower = energy - currentEnergy;
         
-        if (ed < 3.01 && ed > 0.09) {
-            System.out.println("Enemy fired! Creating wave...");
-            // enemy has fired, create a wave here
-            double velocity = 20.0 - (3.0 * ed);
+        if (bulletPower > 0.09 && bulletPower <= 3.0) {
+            double velocity = 20.0 - (3.0 * bulletPower);
             Wave wave = new WaveImpl(this, velocity);
             this.getBattlefield().add(wave);
-            System.out.println("Wave created and added to battlefield");
+            wave.update();
         }
         
-        // Update last energy for next comparison
-        lastEnemyEnergy = currentEnergy;
+        energy = currentEnergy;
+    }
+    
+    public void adjustEnergyForBulletHit(double adjustment) {
+        // This method is no longer needed with the simpler approach
     }
 
     /**

@@ -26,6 +26,18 @@ public interface Battlefield extends Set<Obstacle> {
     Override this method to return different implementations of Enemy
     */
     public Enemy getEnemy(String name);
+    /**
+     * Returns the number of Enemy obstacles in the set, minus one (us)
+     * @return
+     */
+    public int getEnemyCount();
+    /**
+     * Returns the tick number of the obstacle with the smallest 
+     * lastSeen tick number
+     * That is the oldest scan
+     * @return
+     */
+    public long getOldestSighting();
 
     // the Robot implementation
     public AdvancedRobot getSelf();
