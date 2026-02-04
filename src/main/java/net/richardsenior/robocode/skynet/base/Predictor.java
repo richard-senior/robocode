@@ -3,8 +3,10 @@ import java.awt.geom.Point2D;
 
 /**
  * Interface for use by anything which predicts a location and 'n' ticks in the future.
+ * Extends TargetingPredictor to support both geometric (position-based) and 
+ * statistical (bearing-based) prediction methods.
  */
-public interface Predictor {
+public interface Predictor extends TargetingPredictor {
     /** 
     * predict the x,y coordinates of the object this predictor is for, in n ticks in the future 
     * For example if this predictor is underpinned by some sort of polynomial fit to past locations,
@@ -12,6 +14,7 @@ public interface Predictor {
     * @param ticks number of ticks in the future to predict
     */
     public Point2D.Double predict(int ticks);
+    
     /**
      * Assuming travel in a straight line at given velocity from origin point,
      * get the intercept point with this predictor's predicted location.

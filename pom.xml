@@ -44,7 +44,32 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <excludes>
+                        <exclude>**/supersample/**</exclude>
+                    </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>download-sources</id>
+                        <goals>
+                            <goal>sources</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>download-javadocs</id>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -12,14 +12,6 @@ public interface Obstacle {
     // some obstacles may not need updating every tick
     public void update();
     /**
-     * Gets the outline/shape of this obstacle.
-     * If it's a robot it will be a rectangle, if it's a wave it will be a circle etc.
-     * If its an individual wave obstacle it will be a sector of a circle.
-     * @return the area representing this obstacle's shape
-     */
-    public Area getOutline();
-    
-    /**
      * Gets the current position of this obstacle (the last scanned location)
      * @return the position as a Point2D
      */
@@ -31,12 +23,15 @@ public interface Obstacle {
      * @return
      */
     public Battlefield getBattlefield();
-
     /**
-     * Draws the outline of this obstacle's area shape for debugging purposes
-     * @param g the Graphics2D context from onPaint method
+     * Gets the outline of this obstacle as it is now (ticks=0)
+     * or at 'ticks' in the future.
+     * Using any internal prediction mechanisms required
+     * The outline may be multiple 'Area' objects 'summed' into one Area
+     * @param ticksFuture
+     * @return an area in the form of a closed path
      */
-    public void drawOutline(java.awt.Graphics2D g);
+    public Area getOutline(int ticks);
 
     /**
      *  when was the last confirmed sighting (scan) of this obstacle

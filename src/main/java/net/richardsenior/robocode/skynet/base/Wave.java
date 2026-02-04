@@ -16,7 +16,7 @@ public interface Wave extends Obstacle {
     
     /**
      * Gets the current radius of the wave.
-     * @return the radius in pixels
+     * @return the radius in pixels from the origin point
      */
     public int getRadius();
     // returns the enemy that created this wave

@@ -1,32 +1,9 @@
-# Skynet Q-Learning Robocode Robot
+# Skynet (A Robocode bot)
 
-A Robocode robot implementation using Q-learning for autonomous behavior.
-
-## Structure
-
-- `robot/` - Main robot implementation
-- `qlearning/` - Q-learning algorithm implementation  
-- `models/` - Opponent modeling and tracking
-- `utils/` - State encoding and utility functions
-
-## Build
-
-```bash
-mvn compile
-mvn package
-```
+My latest attempt at a competitive Robocode bot.
+Over the course of the last 15 years or so I've probably written about 4.
+Now with the help of agentic AI I can finally be bothered to give it another whirl.
 
 ## Features
-
-- Q-learning for movement decisions
-- Q-learning for firing strategies
-- Opponent modeling and tracking
-- Modular design for multiple learning agents
-- State encoding for efficient learning
-
-## Future Optimizations
-
-- Matrix operations for runtime efficiency
-- Model compression for competition deployment
-- Advanced state representation
-- Multi-agent coordination
+* WaveSurfing/Anti-Gravity style movement based on predicted bullet locations etc.
+* Polynomial movement curve fitting
